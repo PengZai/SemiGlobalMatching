@@ -10,6 +10,7 @@
 #include <cassert>
 #include <vector>
 #include <queue>
+#include <cstring>
 
 void sgm_util::census_transform_5x5(const uint8* source, uint32* census, const sint32& width,
 	const sint32& height)
@@ -18,14 +19,14 @@ void sgm_util::census_transform_5x5(const uint8* source, uint32* census, const s
 		return;
 	}
 
-	// 逐像素计算census值
+	// Calculate census value pixel by pixel
 	for (sint32 i = 2; i < height - 2; i++) {
 		for (sint32 j = 2; j < width - 2; j++) {
 			
-			// 中心像素值
+			// Center pixel value
 			const uint8 gray_center = source[i * width + j];
 			
-			// 遍历大小为5x5的窗口内邻域像素，逐一比较像素值与中心像素值的的大小，计算census值
+			// Traverse the neighborhood pixels in a 5x5 window, compare the pixel values ??with the center pixel value one by one, and calculate the census value
 			uint32 census_val = 0u;
 			for (sint32 r = -2; r <= 2; r++) {
 				for (sint32 c = -2; c <= 2; c++) {
@@ -37,7 +38,7 @@ void sgm_util::census_transform_5x5(const uint8* source, uint32* census, const s
 				}
 			}
 
-			// 中心像素的census值
+			//census value of the center pixel
 			census[i * width + j] = census_val;		
 		}
 	}
@@ -49,14 +50,14 @@ void sgm_util::census_transform_9x7(const uint8* source, uint64* census, const s
 		return;
 	}
 
-	// 逐像素计算census值
+	// Calculate census value pixel by pixel
 	for (sint32 i = 4; i < height - 4; i++) {
 		for (sint32 j = 3; j < width - 3; j++) {
 
-			// 中心像素值
+			// Center pixel value
 			const uint8 gray_center = source[i * width + j];
 
-			// 遍历大小为5x5的窗口内邻域像素，逐一比较像素值与中心像素值的的大小，计算census值
+			// Traverse the neighborhood pixels in a 5x5 window, compare the pixel values ??with the center pixel value one by one, and calculate the census value
 			uint64 census_val = 0u;
 			for (sint32 r = -4; r <= 4; r++) {
 				for (sint32 c = -3; c <= 3; c++) {
@@ -68,7 +69,7 @@ void sgm_util::census_transform_9x7(const uint8* source, uint64* census, const s
 				}
 			}
 
-			// 中心像素的census值
+			//census value of the center pixel
 			census[i * width + j] = census_val;
 		}
 	}
@@ -106,45 +107,45 @@ void sgm_util::CostAggregateLeftRight(const uint8* img_data, const sint32& width
 {
 	assert(width > 0 && height > 0 && max_disparity > min_disparity);
 
-	// 视差范围
+	// Parallax range
 	const sint32 disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
 	const auto& P2_Init = p2_init;
 
-	// 正向(左->右) ：is_forward = true ; direction = 1
-	// 反向(右->左) ：is_forward = false; direction = -1;
+	// Forward (left->right): is_forward = true; direction = 1
+	// Reverse (right->left): is_forward = false; direction = -1;
 	const sint32 direction = is_forward ? 1 : -1;
 
-	// 聚合
+	// Aggregation
 	for (sint32 i = 0u; i < height; i++) {
-		// 路径头为每一行的首(尾,dir=-1)列像素
+		// The path header is the first (last, dir=-1) column of pixels in each row
 		auto cost_init_row = (is_forward) ? (cost_init + i * width * disp_range) : (cost_init + i * width * disp_range + (width - 1) * disp_range);
 		auto cost_aggr_row = (is_forward) ? (cost_aggr + i * width * disp_range) : (cost_aggr + i * width * disp_range + (width - 1) * disp_range);
 		auto img_row = (is_forward) ? (img_data + i * width) : (img_data + i * width + width - 1);
 
-		// 路径上当前灰度值和上一个灰度值
+		// The current grayscale value and the previous grayscale value on the path
 		uint8 gray = *img_row;
 		uint8 gray_last = *img_row;
 
-		// 路径上上个像素的代价数组，多两个元素是为了避免边界溢出（首尾各多一个）
+		// The cost array of the previous pixel on the path. The extra two elements are to avoid boundary overflow (one at the beginning and one at the end)
 		std::vector<uint8> cost_last_path(disp_range + 2, UINT8_MAX);
 
-		// 初始化：第一个像素的聚合代价值等于初始代价值
+		// Initialization: The aggregation cost of the first pixel is equal to the initial cost
 		memcpy(cost_aggr_row, cost_init_row, disp_range * sizeof(uint8));
 		memcpy(&cost_last_path[1], cost_aggr_row, disp_range * sizeof(uint8));
 		cost_init_row += direction * disp_range;
 		cost_aggr_row += direction * disp_range;
 		img_row += direction;
 
-		// 路径上上个像素的最小代价值
+		// The minimum cost of the previous pixel on the path
 		uint8 mincost_last_path = UINT8_MAX;
 		for (auto cost : cost_last_path) {
 			mincost_last_path = std::min(mincost_last_path, cost);
 		}
 
-		// 自方向上第2个像素开始按顺序聚合
+		// Aggregate sequentially starting from the second pixel in the direction
 		for (sint32 j = 0; j < width - 1; j++) {
 			gray = *img_row;
 			uint8 min_cost = UINT8_MAX;
@@ -162,16 +163,16 @@ void sgm_util::CostAggregateLeftRight(const uint8* img_data, const sint32& width
 				min_cost = std::min(min_cost, cost_s);
 			}
 
-			// 重置上个像素的最小代价值和代价数组
+			// Reset the minimum cost value and cost array of the previous pixel
 			mincost_last_path = min_cost;
 			memcpy(&cost_last_path[1], cost_aggr_row, disp_range * sizeof(uint8));
 
-			// 下一个像素
+			// Next pixel
 			cost_init_row += direction * disp_range;
 			cost_aggr_row += direction * disp_range;
 			img_row += direction;
 			
-			// 像素值重新赋值
+			// Reassign pixel values
 			gray_last = gray;
 		}
 	}
@@ -183,45 +184,45 @@ void sgm_util::CostAggregateUpDown(const uint8* img_data, const sint32& width, c
 {
 	assert(width > 0 && height > 0 && max_disparity > min_disparity);
 
-	// 视差范围
+	// Parallax range
 	const sint32 disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
 	const auto& P2_Init = p2_init;
 
-	// 正向(上->下) ：is_forward = true ; direction = 1
-	// 反向(下->上) ：is_forward = false; direction = -1;
+	// Forward (up->down): is_forward = true; direction = 1
+	// Reverse (down->up): is_forward = false; direction = -1;
 	const sint32 direction = is_forward ? 1 : -1;
 
-	// 聚合
+	// polymerization
 	for (sint32 j = 0; j < width; j++) {
-		// 路径头为每一列的首(尾,dir=-1)行像素
+		// The path header is the first (last, dir=-1) row of pixels in each column
 		auto cost_init_col = (is_forward) ? (cost_init + j * disp_range) : (cost_init + (height - 1) * width * disp_range + j * disp_range);
 		auto cost_aggr_col = (is_forward) ? (cost_aggr + j * disp_range) : (cost_aggr + (height - 1) * width * disp_range + j * disp_range);
 		auto img_col = (is_forward) ? (img_data + j) : (img_data + (height - 1) * width + j);
 
-		// 路径上当前灰度值和上一个灰度值
+		// The current grayscale value and the previous grayscale value on the path
 		uint8 gray = *img_col;
 		uint8 gray_last = *img_col;
 
-		// 路径上上个像素的代价数组，多两个元素是为了避免边界溢出（首尾各多一个）
+		// The cost array of the previous pixel on the path. The extra two elements are to avoid boundary overflow (one at the beginning and one at the end)
 		std::vector<uint8> cost_last_path(disp_range + 2, UINT8_MAX);
 
-		// 初始化：第一个像素的聚合代价值等于初始代价值
+		// Initialization: The aggregation cost of the first pixel is equal to the initial cost
 		memcpy(cost_aggr_col, cost_init_col, disp_range * sizeof(uint8));
 		memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(uint8));
 		cost_init_col += direction * width * disp_range;
 		cost_aggr_col += direction * width * disp_range;
 		img_col += direction * width;
 
-		// 路径上上个像素的最小代价值
+		// The minimum cost of the previous pixel on the path
 		uint8 mincost_last_path = UINT8_MAX;
 		for (auto cost : cost_last_path) {
 			mincost_last_path = std::min(mincost_last_path, cost);
 		}
 
-		// 自方向上第2个像素开始按顺序聚合
+		// Aggregate sequentially starting from the second pixel in the direction
 		for (sint32 i = 0; i < height - 1; i ++) {
 			gray = *img_col;
 			uint8 min_cost = UINT8_MAX;
@@ -239,16 +240,16 @@ void sgm_util::CostAggregateUpDown(const uint8* img_data, const sint32& width, c
 				min_cost = std::min(min_cost, cost_s);
 			}
 
-			// 重置上个像素的最小代价值和代价数组
+			// Reset the minimum cost value and cost array of the previous pixel
 			mincost_last_path = min_cost;
 			memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(uint8));
 
-			// 下一个像素
+			// Next pixel
 			cost_init_col += direction * width * disp_range;
 			cost_aggr_col += direction * width * disp_range;
 			img_col += direction * width;
 
-			// 像素值重新赋值
+			// Reassign pixel values
 			gray_last = gray;
 		}
 	}
@@ -260,54 +261,54 @@ void sgm_util::CostAggregateDagonal_1(const uint8* img_data, const sint32& width
 {
 	assert(width > 1 && height > 1 && max_disparity > min_disparity);
 
-	// 视差范围
+	// Parallax range
 	const sint32 disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
 	const auto& P2_Init = p2_init;
 
-	// 正向(左上->右下) ：is_forward = true ; direction = 1
-	// 反向(右下->左上) ：is_forward = false; direction = -1;
+	// Forward (upper left -> lower right): is_forward = true; direction = 1
+	// Reverse direction (lower right -> upper left): is_forward = false; direction = -1;
 	const sint32 direction = is_forward ? 1 : -1;
 
-	// 聚合
+	// aggregation
 
-	// 存储当前的行列号，判断是否到达影像边界
+	// Store the current row and column number to determine whether the image boundary has been reached
 	sint32 current_row = 0;
 	sint32 current_col = 0;
 
 	for (sint32 j = 0; j < width; j++) {
-		// 路径头为每一列的首(尾,dir=-1)行像素
+		// The path header is the first (last, dir=-1) row of pixels in each column
 		auto cost_init_col = (is_forward) ? (cost_init + j * disp_range) : (cost_init + (height - 1) * width * disp_range + j * disp_range);
 		auto cost_aggr_col = (is_forward) ? (cost_aggr + j * disp_range) : (cost_aggr + (height - 1) * width * disp_range + j * disp_range);
 		auto img_col = (is_forward) ? (img_data + j) : (img_data + (height - 1) * width + j);
 
-		// 路径上上个像素的代价数组，多两个元素是为了避免边界溢出（首尾各多一个）
+		// The cost array of the previous pixel on the path. The extra two elements are to avoid boundary overflow (one at the beginning and one at the end)
 		std::vector<uint8> cost_last_path(disp_range + 2, UINT8_MAX);
 
-		// 初始化：第一个像素的聚合代价值等于初始代价值
+		// Initialization: The aggregation cost of the first pixel is equal to the initial cost
 		memcpy(cost_aggr_col, cost_init_col, disp_range * sizeof(uint8));
 		memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(uint8));
 
-		// 路径上当前灰度值和上一个灰度值
+		// The current grayscale value and the previous grayscale value on the path
 		uint8 gray = *img_col;
 		uint8 gray_last = *img_col;
 
-		// 对角线路径上的下一个像素，中间间隔width+1个像素
-		// 这里要多一个边界处理
-		// 沿对角线前进的时候会碰到影像列边界，策略是行号继续按原方向前进，列号到跳到另一边界
+		// The next pixel on the diagonal path, with a gap of width + 1 pixels between them
+		// Here we need one more boundary processing
+		// When moving diagonally, you will encounter the image column boundary. The strategy is to continue moving in the original direction with the row number and jump to the other boundary with the column number.
 		current_row = is_forward ? 0 : height - 1;
 		current_col = j;
 		if (is_forward && current_col == width - 1 && current_row < height - 1) {
-			// 左上->右下，碰右边界
+			// Upper left -> lower right, touch the right border
 			cost_init_col = cost_init + (current_row + direction) * width * disp_range;
 			cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range;
 			img_col = img_data + (current_row + direction) * width;
             current_col = 0;
 		}
 		else if (!is_forward && current_col == 0 && current_row > 0) {
-			// 右下->左上，碰左边界
+			// Bottom right -> top left, touch the left border
 			cost_init_col = cost_init + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 			cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 			img_col = img_data + (current_row + direction) * width + (width - 1);
@@ -319,13 +320,13 @@ void sgm_util::CostAggregateDagonal_1(const uint8* img_data, const sint32& width
 			img_col += direction * (width + 1);
 		}
 
-		// 路径上上个像素的最小代价值
+		// The minimum cost of the previous pixel on the path
 		uint8 mincost_last_path = UINT8_MAX;
 		for (auto cost : cost_last_path) {
 			mincost_last_path = std::min(mincost_last_path, cost);
 		}
 
-		// 自方向上第2个像素开始按顺序聚合
+		// Aggregate sequentially starting from the second pixel in the direction
 		for (sint32 i = 0; i < height - 1; i ++) {
 			gray = *img_col;
 			uint8 min_cost = UINT8_MAX;
@@ -343,26 +344,26 @@ void sgm_util::CostAggregateDagonal_1(const uint8* img_data, const sint32& width
 				min_cost = std::min(min_cost, cost_s);
 			}
 
-			// 重置上个像素的最小代价值和代价数组
+			// Reset the minimum cost value and cost array of the previous pixel
 			mincost_last_path = min_cost;
 			memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(uint8));
 
-			// 当前像素的行列号
+			// Row and column number of the current pixel
 			current_row += direction;
 			current_col += direction;
 			
-			// 下一个像素,这里要多一个边界处理
-			// 这里要多一个边界处理
-			// 沿对角线前进的时候会碰到影像列边界，策略是行号继续按原方向前进，列号到跳到另一边界
+			// Next pixel, one more boundary to process here
+			// One more boundary to process here
+			// When moving diagonally, we'll hit an image column boundary. The strategy is to continue moving in the original direction for the row number and jump to the next boundary for the column number.
 			if (is_forward && current_col == width - 1 && current_row < height - 1) {
-				// 左上->右下，碰右边界
+				// Upper left -> lower right, touch the right border
 				cost_init_col = cost_init + (current_row + direction) * width * disp_range;
 				cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range;
 				img_col = img_data + (current_row + direction) * width;
                 current_col = 0;
 			}
 			else if (!is_forward && current_col == 0 && current_row > 0) {
-				// 右下->左上，碰左边界
+				// Bottom right -> top left, touch the left border
 				cost_init_col = cost_init + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 				cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 				img_col = img_data + (current_row + direction) * width + (width - 1);
@@ -374,7 +375,7 @@ void sgm_util::CostAggregateDagonal_1(const uint8* img_data, const sint32& width
 				img_col += direction * (width + 1);
 			}
 
-			// 像素值重新赋值
+			// Reassign pixel values
 			gray_last = gray;
 		}
 	}
@@ -386,54 +387,54 @@ void sgm_util::CostAggregateDagonal_2(const uint8* img_data, const sint32& width
 {
 	assert(width > 1 && height > 1 && max_disparity > min_disparity);
 
-	// 视差范围
+	// Parallax range
 	const sint32 disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
 	const auto& P2_Init = p2_init;
 
-	// 正向(右上->左下) ：is_forward = true ; direction = 1
-	// 反向(左下->右上) ：is_forward = false; direction = -1;
+	// Forward (upper right -> lower left): is_forward = true; direction = 1
+	// Reverse (lower left -> upper right): is_forward = false; direction = -1;
 	const sint32 direction = is_forward ? 1 : -1;
 
-	// 聚合
+	// Aggregation
 
-	// 存储当前的行列号，判断是否到达影像边界
+	// Store the current row and column numbers to determine if the image boundary has been reached
 	sint32 current_row = 0;
 	sint32 current_col = 0;
 
 	for (sint32 j = 0; j < width; j++) {
-		// 路径头为每一列的首(尾,dir=-1)行像素
+		// The path header is the first (last, dir=-1) row of pixels in each column
 		auto cost_init_col = (is_forward) ? (cost_init + j * disp_range) : (cost_init + (height - 1) * width * disp_range + j * disp_range);
 		auto cost_aggr_col = (is_forward) ? (cost_aggr + j * disp_range) : (cost_aggr + (height - 1) * width * disp_range + j * disp_range);
 		auto img_col = (is_forward) ? (img_data + j) : (img_data + (height - 1) * width + j);
 
-		// 路径上上个像素的代价数组，多两个元素是为了避免边界溢出（首尾各多一个）
+		// The cost array of the previous pixel on the path. The extra two elements are to avoid boundary overflow (one at the beginning and one at the end)
 		std::vector<uint8> cost_last_path(disp_range + 2, UINT8_MAX);
 
-		// 初始化：第一个像素的聚合代价值等于初始代价值
+		// Initialization: The aggregation cost of the first pixel is equal to the initial cost
 		memcpy(cost_aggr_col, cost_init_col, disp_range * sizeof(uint8));
 		memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(uint8));
 
-		// 路径上当前灰度值和上一个灰度值
+		// The current grayscale value and the previous grayscale value on the path
 		uint8 gray = *img_col;
 		uint8 gray_last = *img_col;
 
-		// 对角线路径上的下一个像素，中间间隔width-1个像素
-		// 这里要多一个边界处理
-		// 沿对角线前进的时候会碰到影像列边界，策略是行号继续按原方向前进，列号到跳到另一边界
+		// Next pixel on the diagonal path, with a gap of width - 1 pixels between them
+		// Additional boundary handling is required here
+		// When moving diagonally, we will encounter an image column boundary. The strategy is to continue moving in the original direction for the row number and jump to the next boundary when the column number reaches it.
 		current_row = is_forward ? 0 : height - 1;
 		current_col = j;
 		if (is_forward && current_col == 0 && current_row < height - 1) {
-			// 右上->左下，碰左边界
+			// Upper right -> lower left, touching the left border
 			cost_init_col = cost_init + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 			cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 			img_col = img_data + (current_row + direction) * width + (width - 1);
             current_col = width - 1;
 		}
 		else if (!is_forward && current_col == width - 1 && current_row > 0) {
-			// 左下->右上，碰右边界
+			// Lower left -> upper right, touch the right border
 			cost_init_col = cost_init + (current_row + direction) * width * disp_range ;
 			cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range;
 			img_col = img_data + (current_row + direction) * width;
@@ -445,13 +446,13 @@ void sgm_util::CostAggregateDagonal_2(const uint8* img_data, const sint32& width
 			img_col += direction * (width - 1);
 		}
 
-		// 路径上上个像素的最小代价值
+		// The minimum cost of the previous pixel on the path
 		uint8 mincost_last_path = UINT8_MAX;
 		for (auto cost : cost_last_path) {
 			mincost_last_path = std::min(mincost_last_path, cost);
 		}
 
-		// 自路径上第2个像素开始按顺序聚合
+		// Aggregate sequentially starting from the second pixel on the path
 		for (sint32 i = 0; i < height - 1; i++) {
 			gray = *img_col;
 			uint8 min_cost = UINT8_MAX;
@@ -469,26 +470,26 @@ void sgm_util::CostAggregateDagonal_2(const uint8* img_data, const sint32& width
 				min_cost = std::min(min_cost, cost_s);
 			}
 
-			// 重置上个像素的最小代价值和代价数组
+			// Reset the minimum cost value and cost array of the previous pixel
 			mincost_last_path = min_cost;
 			memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(uint8));
 
-			// 当前像素的行列号
+			// Row and column number of the current pixel
 			current_row += direction;
 			current_col -= direction;
 
-			// 下一个像素,这里要多一个边界处理
-			// 这里要多一个边界处理
-			// 沿对角线前进的时候会碰到影像列边界，策略是行号继续按原方向前进，列号到跳到另一边界
+			// Next pixel, one more boundary to process here
+			// One more boundary to process here
+			// When moving diagonally, we'll hit an image column boundary. The strategy is to continue moving in the original direction for the row number and jump to the next boundary for the column number.
 			if (is_forward && current_col == 0 && current_row < height - 1) {
-				// 右上->左下，碰左边界
+				// Upper right -> lower left, touching the left border
 				cost_init_col = cost_init + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 				cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 				img_col = img_data + (current_row + direction) * width + (width - 1);
                 current_col = width - 1;
 			}
 			else if (!is_forward && current_col == width - 1 && current_row > 0) {
-				// 左下->右上，碰右边界
+				// Lower left -> upper right, touch the right border
 				cost_init_col = cost_init + (current_row + direction) * width * disp_range;
 				cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range;
 				img_col = img_data + (current_row + direction) * width;
@@ -500,7 +501,7 @@ void sgm_util::CostAggregateDagonal_2(const uint8* img_data, const sint32& width
 				img_col += direction * (width - 1);
 			}
 
-			// 像素值重新赋值
+			// Reassign pixel values
 			gray_last = gray;
 		}
 	}
@@ -512,7 +513,7 @@ void sgm_util::MedianFilter(const float32* in, float32* out, const sint32& width
 	const sint32 radius = wnd_size / 2;
 	const sint32 size = wnd_size * wnd_size;
 
-	// 存储局部窗口内的数据
+	//Store data in the local window
 	std::vector<float32> wnd_data;
 	wnd_data.reserve(size);
 
@@ -520,7 +521,7 @@ void sgm_util::MedianFilter(const float32* in, float32* out, const sint32& width
 		for (sint32 j = 0; j < width; j++) {
 			wnd_data.clear();
 
-			// 获取局部窗口数据
+			// Get local window data
 			for (sint32 r = -radius; r <= radius; r++) {
 				for (sint32 c = -radius; c <= radius; c++) {
 					const sint32 row = i + r;
@@ -531,9 +532,9 @@ void sgm_util::MedianFilter(const float32* in, float32* out, const sint32& width
 				}
 			}
 
-			// 排序
+			// Sort
 			std::sort(wnd_data.begin(), wnd_data.end());
-			// 取中值
+			// Get the median
 			out[i * width + j] = wnd_data[wnd_data.size() / 2];
 		}
 	}
@@ -547,30 +548,30 @@ void sgm_util::RemoveSpeckles(float32* disparity_map, const sint32& width, const
 		return;
 	}
 
-	// 定义标记像素是否访问的数组
+	// Defines the array that marks whether pixels are accessed
 	std::vector<bool> visited(uint32(width*height),false);
 	for(sint32 i=0;i<height;i++) {
 		for(sint32 j=0;j<width;j++) {
 			if (visited[i * width + j] || disparity_map[i*width+j] == invalid_val) {
-				// 跳过已访问的像素及无效像素
+				// Skip visited pixels and invalid pixels
 				continue;
 			}
-			// 广度优先遍历，区域跟踪
-			// 把连通域面积小于阈值的区域视差全设为无效值
+			// Breadth-first traversal, region tracking
+			// Set the disparity of connected regions whose area is less than the threshold to an invalid value
 			std::vector<std::pair<sint32, sint32>> vec;
 			vec.emplace_back(i, j);
 			visited[i * width + j] = true;
 			uint32 cur = 0;
 			uint32 next = 0;
 			do {
-				// 广度优先遍历区域跟踪	
+				// Breadth-first traversal area tracking
 				next = vec.size();
 				for (uint32 k = cur; k < next; k++) {
 					const auto& pixel = vec[k];
 					const sint32 row = pixel.first;
 					const sint32 col = pixel.second;
 					const auto& disp_base = disparity_map[row * width + col];
-					// 8邻域遍历
+					//8 neighborhood traversal
 					for(int r=-1;r<=1;r++) {
 						for(int c=-1;c<=1;c++) {
 							if(r==0&&c==0) {
@@ -592,7 +593,7 @@ void sgm_util::RemoveSpeckles(float32* disparity_map, const sint32& width, const
 				cur = next;
 			} while (next < vec.size());
 
-			// 把连通域面积小于阈值的区域视差全设为无效值
+			// Set the disparity of the connected domain area smaller than the threshold to invalid value
 			if(vec.size() < min_speckle_aera) {
 				for(auto& pix:vec) {
 					disparity_map[pix.first * width + pix.second] = invalid_val;
