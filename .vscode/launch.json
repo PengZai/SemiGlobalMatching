@@ -1,0 +1,31 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [{
+        "name": "(gdb) Launch",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/SemiGlobalMatching/build/run_semi_global_matching",
+        "args": [
+            // "${workspaceFolder}/Data/BotanicGarden/left_1666059840150278091.png",
+            // "${workspaceFolder}/Data/BotanicGarden/right_1666059840150278091.png",  
+            // "${workspaceFolder}/Data/Cloth3/view1.png",
+            // "${workspaceFolder}/Data/Cloth3/view5.png",  
+            // "${workspaceFolder}/Data/Reindeer/view1.png",
+            // "${workspaceFolder}/Data/Reindeer/view5.png",  
+            // "${workspaceFolder}/Data/Kitti/left_000000.png",
+            // "${workspaceFolder}/Data/Kitti/right_000000.png", 
+            "${workspaceFolder}/Data/BotanicGarden_rectified_2/left_1666059868050129414.png",
+            "${workspaceFolder}/Data/BotanicGarden_rectified_2/right_1666059868050129414.png",  
+            "0", 
+            "256"
+        ],
+        "stopAtEntry": false,
+        "cwd": "${fileDirname}",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "gdb"
+    }]
+}

@@ -5,7 +5,7 @@ project(semi_global_matching)
 find_package(OpenCV 4 REQUIRED)
 
 
-option(ENABLE_CMAKE_DEBUG "Enable detailed debug messages" OFF)
+option(ENABLE_CMAKE_DEBUG "Enable detailed debug messages" ON)
 
 if(ENABLE_CMAKE_DEBUG)
     # Debug or Release
