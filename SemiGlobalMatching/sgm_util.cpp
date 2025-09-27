@@ -26,7 +26,8 @@ void sgm_util::census_transform_5x5(const uint8* source, uint32* census, const s
 			// Center pixel value
 			const uint8 gray_center = source[i * width + j];
 			
-			// Traverse the neighborhood pixels in a 5x5 window, compare the pixel values ??with the center pixel value one by one, and calculate the census value
+			// Traverse the neighborhood pixels in a 5x5 window, compare the pixel values with the center pixel value one by one, 
+			// and calculate the census value
 			uint32 census_val = 0u;
 			for (sint32 r = -2; r <= 2; r++) {
 				for (sint32 c = -2; c <= 2; c++) {

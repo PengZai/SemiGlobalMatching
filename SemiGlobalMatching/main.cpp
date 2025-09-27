@@ -88,7 +88,8 @@ int main(int argv, char** argc)
     sgm_option.p1 = 10;
     sgm_option.p2_init = 150;
     // Disparity map filling
-    // The results of disparity map filling are unreliable. For engineering purposes, it is not recommended. For scientific research, it is acceptable.
+    // The results of disparity map filling are unreliable. For engineering purposes, it is not recommended. 
+    // For scientific research, it is acceptable.
     sgm_option.is_fill_holes = false;
 
     printf("w = %d, h = %d, d = [%d,%d]\n\n", width, height, sgm_option.min_disparity, sgm_option.max_disparity);

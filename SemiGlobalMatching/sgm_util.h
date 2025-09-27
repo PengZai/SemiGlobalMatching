@@ -13,7 +13,7 @@
 
 namespace sgm_util
 {
-	//������������ Census Tools
+	//....... Census Tools
 	// Census Transformation
 
 	/**
@@ -30,7 +30,7 @@ namespace sgm_util
 	uint8 Hamming64(const uint64& x, const uint64& y);
 
 	/**
-	* \brief Left-right path aggregation �� ��
+	* \brief Left-right path aggregation → ←
 	* \param img_data Input, image data
 	* \param width Input, image width
 	* \param height Input, image height
@@ -46,7 +46,7 @@ namespace sgm_util
 		const sint32& p1,const sint32& p2_init, const uint8* cost_init, uint8* cost_aggr, bool is_forward = true);
 
 	/**
-	* \brief Up and down path aggregation �� ��
+	* \brief Up and down path aggregation ↓ ↑
 	* \param img_data Input, image data
 	* \param width Input, image width
 	* \param height Input, image height
@@ -62,7 +62,7 @@ namespace sgm_util
 		const sint32& p1, const sint32& p2_init, const uint8* cost_init, uint8* cost_aggr, bool is_forward = true);
 
 	/**
-	* \brief Diagonal 1-path aggregation (upper left <-> lower right) �K �I
+	* \brief Diagonal 1-path aggregation (upper left <-> lower right) ↘ ↖
 	* \param img_data Input, image data
 	* \param width Input, image width
 	* \param height Input, image height
@@ -78,7 +78,7 @@ namespace sgm_util
 		const sint32& p1, const sint32& p2_init, const uint8* cost_init, uint8* cost_aggr, bool is_forward = true);
 
 	/**
-	* \brief Diagonal 2-path aggregation (upper right <-> lower left) �L �J
+	* \brief Diagonal 2-path aggregation (upper right <-> lower left) ↙ ↗
 	* \param img_data Input, image data
 	* \param width Input, image width
 	* \param height Input, image height

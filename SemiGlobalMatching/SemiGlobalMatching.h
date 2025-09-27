@@ -10,7 +10,7 @@
 #include <vector>
 
 /**
- * \brief SemiGlobalMatching class��General implementation of Semi-Global Matching��
+ * \brief SemiGlobalMatching class General implementation of Semi-Global Matching 
  */
 class SemiGlobalMatching
 {
@@ -135,9 +135,9 @@ private:
 	/** \brief Aggregate matching cost	*/
 	uint16* cost_aggr_;
 
-	// �K �� �L 5 3 7
-	// �� �� 1 2
-	// �J �� �I 8 4 6
+	// ↘ ↓ ↙ 5 3 7
+	// → ← 1 2
+	// ↗ ↑ ↖ 8 4 6
 	/** \brief Aggregate matching cost-direction 1	*/
 	uint8* cost_aggr_1_;
 	/** \brief Aggregate matching cost-direction 2	*/

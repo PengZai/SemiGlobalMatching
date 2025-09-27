@@ -135,10 +135,10 @@ bool SemiGlobalMatching::Match(const uint8* img_left, const uint8* img_right, fl
     // cost aggregation
     CostAggregation();
 
-    end = steady_clock::now();
-    tt = duration_cast<milliseconds>(end - start);
-    printf("cost aggregating! timing :	%lf s\n", tt.count() / 1000.0);
-    start = steady_clock::now();
+    // end = steady_clock::now();
+    // tt = duration_cast<milliseconds>(end - start);
+    // printf("cost aggregating! timing :	%lf s\n", tt.count() / 1000.0);
+    // start = steady_clock::now();
 
     // disparity calculation
     ComputeDisparity();
